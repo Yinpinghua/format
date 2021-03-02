@@ -44,7 +44,7 @@ namespace util
 
 	static void format_item(std::ostringstream& ss, const std::string& item, const arg_array& args)
 	{
-		int index = 0;
+		size_t index = 0;
 		int alignment = 0;
 		std::string fmt;
 
