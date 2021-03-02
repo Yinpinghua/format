@@ -78,6 +78,7 @@ namespace util
 		return;
 	}
 
+	//c++11语法
 	template <class T>
 	static void transfer(arg_array& argArray, T t)
 	{
@@ -87,6 +88,7 @@ namespace util
 	template <class T, typename... Args>
 	static void transfer(arg_array& argArray, T t, Args&&... args)
 	{
+		//c++11语法
 		transfer(argArray, t);
 		transfer(argArray, args...);
 	}
@@ -94,9 +96,10 @@ namespace util
 	template <typename... Args>
 	std::string format(const std::string& format_str, Args&&... args)
 	{
+		std::string str;
 		if (sizeof...(args) == 0)
 		{
-			return format_str;
+			return std::move(str);
 		}
 
 		arg_array argArray;
@@ -133,6 +136,7 @@ namespace util
 			start = pos + 1;
 		}
 
-		return ss.str();
+		str = ss.str();
+		return std::move(str);
 	}
 }
