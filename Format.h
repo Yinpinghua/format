@@ -10,39 +10,39 @@
 
 namespace util
 {
-	class ArgBase
+	class arg_base
 	{
 	public:
-		ArgBase() {}
-		virtual ~ArgBase() {}
-		virtual void Format(std::ostringstream &ss, const std::string& fmt) = 0;
+		arg_base() = default;
+		virtual ~arg_base() = default;
+		virtual void format(std::ostringstream& ss, const std::string& fmt) = 0;
 	};
 
 	template <class T>
-	class Arg : public ArgBase
+	class arg : public arg_base
 	{
 	public:
-		Arg(T arg) : m_arg(arg) {}
-		virtual ~Arg(){}
-		virtual void Format(std::ostringstream &ss, const std::string& fmt)
+		arg(T arg) : arg_(arg) {}
+		virtual ~arg() = default;
+		virtual void format(std::ostringstream& ss, const std::string& fmt)
 		{
-			ss << m_arg;
+			ss << arg_;
 		}
 	private:
-		T m_arg;
+		T arg_;
 	};
 
-	class ArgArray : public std::vector < ArgBase* >
+	class arg_array : public std::vector < arg_base* >
 	{
 	public:
-		ArgArray() {}
-		~ArgArray()
+		arg_array() = default;
+		~arg_array()
 		{
-			std::for_each(begin(), end(), [](ArgBase* p){ delete p; });
+			std::for_each(begin(), end(), [](arg_base* p) { delete p; p = nullptr;});
 		}
 	};
 
-	static void FormatItem(std::ostringstream& ss, const std::string& item, const ArgArray& args)
+	static void format_item(std::ostringstream& ss, const std::string& item, const arg_array& args)
 	{
 		int index = 0;
 		int alignment = 0;
@@ -73,48 +73,48 @@ namespace util
 			fmt = endptr + 1;
 		}
 
-		args[index]->Format(ss, fmt);
+		args[index]->format(ss, fmt);
 
 		return;
 	}
 
 	template <class T>
-	static void Transfer(ArgArray& argArray, T t)
+	static void transfer(arg_array& argArray, T t)
 	{
-		argArray.push_back(new Arg<T>(t));
+		argArray.push_back(new arg<T>(t));
 	}
 
 	template <class T, typename... Args>
-	static void Transfer(ArgArray& argArray, T t, Args&&... args)
+	static void transfer(arg_array& argArray, T t, Args&&... args)
 	{
-		Transfer(argArray, t);
-		Transfer(argArray, args...);
+		transfer(argArray, t);
+		transfer(argArray, args...);
 	}
 
 	template <typename... Args>
-	std::string Format(const std::string& format, Args&&... args)
+	std::string format(const std::string& format_str, Args&&... args)
 	{
 		if (sizeof...(args) == 0)
 		{
-			return format;
+			return format_str;
 		}
 
-		ArgArray argArray;
-		Transfer(argArray, args...);
+		arg_array argArray;
+		transfer(argArray, args...);
 		size_t start = 0;
 		size_t pos = 0;
 		std::ostringstream ss;
 		while (true)
 		{
-			pos = format.find('{', start);
+			pos = format_str.find('{', start);
 			if (pos == std::string::npos)
 			{
-				ss << format.substr(start);
+				ss << format_str.substr(start);
 				break;
 			}
 
-			ss << format.substr(start, pos - start);
-			if (format[pos + 1] == '{')
+			ss << format_str.substr(start, pos - start);
+			if (format_str[pos + 1] == '{')
 			{
 				ss << '{';
 				start = pos + 2;
@@ -122,14 +122,14 @@ namespace util
 			}
 
 			start = pos + 1;
-			pos = format.find('}', start);
+			pos = format_str.find('}', start);
 			if (pos == std::string::npos)
 			{
-				ss << format.substr(start - 1);
+				ss << format_str.substr(start - 1);
 				break;
 			}
 
-			FormatItem(ss, format.substr(start, pos - start), argArray);
+			format_item(ss, format_str.substr(start, pos - start), argArray);
 			start = pos + 1;
 		}
 
