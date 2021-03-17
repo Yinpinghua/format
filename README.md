@@ -1,7 +1,7 @@
 format
 ======
 
-A simple header-only C++11 std::string formatter
+A simple header-only C++17 std::string formatter
 
 Usage:
 ------
