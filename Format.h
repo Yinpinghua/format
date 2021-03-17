@@ -32,73 +32,66 @@ namespace util
 		T arg_;
 	};
 
-	class arg_array : public std::vector < arg_base* >
+	class arg_array : public std::vector <std::shared_ptr<arg_base>>
 	{
 	public:
 		arg_array() = default;
-		~arg_array()
-		{
-			std::for_each(begin(), end(), [](arg_base* p) { delete p; p = nullptr;});
+		~arg_array(){
+			clear();
 		}
 	};
 
-	static void format_item(std::ostringstream& ss, const std::string& item, const arg_array& args)
-	{
+	static void format_item(std::ostringstream& ss, const std::string& item, const arg_array& args){
 		size_t index = 0;
 		int alignment = 0;
 		std::string fmt;
 
 		char* endptr = nullptr;
 		index = strtol(&item[0], &endptr, 10);
-		if (index < 0 || index >= args.size())
-		{
+		if (index < 0 || index >= args.size()){
 			return;
 		}
 
-		if (*endptr == ',')
-		{
+		if (*endptr == ','){
 			alignment = strtol(endptr + 1, &endptr, 10);
-			if (alignment > 0)
-			{
+			if (alignment > 0){
 				ss << std::right << std::setw(alignment);
-			}
-			else if (alignment < 0)
-			{
+			}else if (alignment < 0){
 				ss << std::left << std::setw(-alignment);
 			}
 		}
 
-		if (*endptr == ':')
-		{
+		if (*endptr == ':'){
 			fmt = endptr + 1;
 		}
 
 		args[index]->format(ss, fmt);
-
-		return;
 	}
 
-	//c++11语法
 	template <class T>
-	static void transfer(arg_array& argArray, T t)
-	{
-		argArray.push_back(new arg<T>(t));
+	static void transfer(arg_array& argArray, T t){
+		argArray.push_back(std::make_shared<arg<T>>(t));
 	}
 
-	template <class T, typename... Args>
-	static void transfer(arg_array& argArray, T t, Args&&... args)
-	{
-		//c++11语法
-		transfer(argArray, t);
-		transfer(argArray, args...);
+	//c++17之前写法
+	//template <class T, typename... Args>
+	//static void transfer(arg_array& argArray, T t, Args&&... args)
+	//{
+	//
+	//	transfer(argArray, t);
+	//	transfer(argArray, args...);
+	//}
+
+	//c++17语法(折叠表达式)
+	template<typename... Args>
+	static void transfer(arg_array& argArray, Args&&... args){
+		(transfer(argArray,args), ...);
 	}
 
 	template <typename... Args>
-	std::string format(const std::string& format_str, Args&&... args)
-	{
+	std::string format(const std::string& format_str, Args&&... args){
 		std::string str;
-		if (sizeof...(args) == 0)
-		{
+		if (sizeof...(args) == 0){
 			return std::move(str);
 		}
 
@@ -107,18 +100,15 @@ namespace util
 		size_t start = 0;
 		size_t pos = 0;
 		std::ostringstream ss;
-		while (true)
-		{
+		while (true){
 			pos = format_str.find('{', start);
-			if (pos == std::string::npos)
-			{
+			if (pos == std::string::npos){
 				ss << format_str.substr(start);
 				break;
 			}
 
 			ss << format_str.substr(start, pos - start);
-			if (format_str[pos + 1] == '{')
-			{
+			if (format_str[pos + 1] == '{'){
 				ss << '{';
 				start = pos + 2;
 				continue;
@@ -126,8 +116,7 @@ namespace util
 
 			start = pos + 1;
 			pos = format_str.find('}', start);
-			if (pos == std::string::npos)
-			{
+			if (pos == std::string::npos){
 				ss << format_str.substr(start - 1);
 				break;
 			}
