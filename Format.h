@@ -15,7 +15,7 @@ namespace util
 	public:
 		arg_base() = default;
 		virtual ~arg_base() = default;
-		virtual void format(std::ostringstream& ss, const std::string& fmt) = 0;
+		virtual void format(std::ostringstream& ss) = 0;
 	};
 
 	template <class T>
@@ -24,8 +24,7 @@ namespace util
 	public:
 		arg(T arg) : arg_(arg) {}
 		virtual ~arg() = default;
-		virtual void format(std::ostringstream& ss, const std::string& fmt)
-		{
+		virtual void format(std::ostringstream& ss){
 			ss << arg_;
 		}
 	private:
@@ -42,30 +41,12 @@ namespace util
 	};
 
 	static void format_item(std::ostringstream& ss, const std::string& item, const arg_array& args){
-		size_t index = 0;
-		int alignment = 0;
-		std::string fmt;
-
-		char* endptr = nullptr;
-		index = strtol(&item[0], &endptr, 10);
+		size_t index = strtol(&item[0], nullptr, 10);
 		if (index < 0 || index >= args.size()){
 			return;
 		}
 
-		if (*endptr == ','){
-			alignment = strtol(endptr + 1, &endptr, 10);
-			if (alignment > 0){
-				ss << std::right << std::setw(alignment);
-			}else if (alignment < 0){
-				ss << std::left << std::setw(-alignment);
-			}
-		}
-
-		if (*endptr == ':'){
-			fmt = endptr + 1;
-		}
-
-		args[index]->format(ss, fmt);
+		args[index]->format(ss);
 	}
 
 	template <class T>
