@@ -22,7 +22,7 @@ namespace util
 	class arg : public arg_base
 	{
 	public:
-		arg(T arg) : arg_(arg) {}
+		arg(const T& arg) : arg_(arg) {}
 		virtual ~arg() = default;
 		virtual void format(std::ostringstream& ss){
 			ss << arg_;
